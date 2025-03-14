@@ -1,0 +1,50 @@
+version: "3.9"
+
+networks:
+  cbr:
+    driver: bridge
+
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ExchangeRatesCbr/Dockerfile
+    restart: always
+    networks: 
+      - cbr
+    depends_on:
+      - db
+
+  db:
+    container_name: db
+    image: postgres:17
+    environment:
+      POSTGRES_USER: exchange_service
+      POSTGRES_PASSWORD: secret_password
+      POSTGRES_DB: exchange_rate_cbr
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - cbr
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin_password
+    restart: always
+    ports:
+      - "5050:80"
+    networks: 
+      - cbr
+    depends_on:
+      - db
+    
+volumes:
+  db_data:
